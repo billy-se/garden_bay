@@ -1,5 +1,5 @@
 datasource db{
-    provider = "postgres"
+    provider = "postgresql"
     url = env("DATABASE_URL")
 }
 
@@ -11,13 +11,97 @@ model User{
     id Int @id @default(autoincrement())
     email String @unique
     name String
+    merchantMembership MerchantMember[]
+    auditLogs AuditLog[]
+}
+
+model Merchant{
+    id Int @id @default(autoincrement())
+    slug String @unique
+    name String
+    membership MerchantMember[]
+    products Product[]
+    orders Order[]
+}
+
+model MerchantMember{
+    id Int @id @default(autoincrement())
+    role String
+    userId Int
+    user User @relation(fields: [userId], references: [id])
+    merchantId Int
+    merchant Merchant @relation(fields: [merchantId], references: [id])
+}
+
+model Warehouse{
+    id Int @id @default(autoincrement())
+    location String
+    inventoryRecord Inventory[]
+    shipments Shipment[]
+}
+
+model Product{
+    id Int @id @default(autoincrement())
+    sku String @unique
+    name String
+    price Float
+    merchantId Int
+    merchant Merchant @relation(fields: [merchantId], references: [id])
+    inventoryStockRecords Inventory[]
+    orderItems OrderItem[]
+}
+
+model Inventory{
+    id Int @id @default(autoincrement())
+    stockLevel Int
+    warehouseId Int
+    warehouse Warehouse @relation(fields: [warehouseId], references: [id])
+    productId Int
+    product Product @relation(fields: [productId], references: [id])
+}
+
+model Customer{
+    id Int @id @default(autoincrement())
+    email String @unique
+    name String
     orders Order[]
 }
 
 model Order{
     id Int @id @default(autoincrement())
-    createdAt DateTime @DEFAULT(now())
-    userId Int
-    users User @relation(fields: [userId], references: [id])
+    status String
+    customerId Int
+    customer Customer @relation(fields: [customerId], references: [id])
+    merchantId Int
+    merchant Merchant @relation(fields: [merchantId], references: [id])
     orderItems OrderItem[]
+    shipments Shipment[]
+}
+
+model OrderItem{
+    id Int @id @default(autoincrement())
+    quantity Int
+    unitPrice Float
+    orderId Int
+    order Order @relation(fields: [orderId], references: [id])
+    productId Int
+    product Product @relation(fields: [productId], references: [id])
+}
+
+model Shipment{
+    id Int @id @default(autoincrement())
+    trackingNumber String @unique
+    status String
+    orderId Int
+    order Order @relation(fields: [orderId], references: [id])
+    warehouseId Int
+    warehouse Warehouse @relation(fields: [warehouseId], references: [id])
+}
+
+model AuditLog{
+    id Int @id @default(autoincrement())
+    action String
+    createdAt DateTime @default(now())
+    userId Int
+    user User @relation(fields: [userId], references: [id])
 }

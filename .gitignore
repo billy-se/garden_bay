@@ -1,3 +1,5 @@
 sequence.md
 tasks.md
 .env
+prisma-lab/node_modules/
+node_modules/
